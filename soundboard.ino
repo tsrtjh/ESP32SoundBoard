@@ -9,10 +9,10 @@
 
 // Definitions
 
-// SD Card
+    // SD Card
     #define SD_CS       7          // SD Card chip select
    
-// I2S
+    // I2S
     #define I2S_DOUT    GPIO_NUM_3                // i2S Data out from ESP32 -> DIN pin
     #define I2S_BCLK    GPIO_NUM_1                // Bit clock
     #define I2S_LRC     GPIO_NUM_0                // Left/Right clock, also known as Frame clock or word select
@@ -20,48 +20,46 @@
 
 
 
-// Wav File reading
+    // Wav File reading
     #define NUM_BYTES_TO_READ_FROM_FILE 1024      // How many bytes to read from wav file at a time
 
-
+//------------------------------------------------------------------------------------------------------------------------
 
 // Constants
-
-
-
-const int MASK1 = 1;                  // Mask for decoding what column to power
-const int MASK2 = 2;                  // Mask for decoding what column to power
-
-const int TICKLENGTH = 20;            // Length of system power tick (in mili-seconds)
-const int COOLOFF = 200;              // Amount of ticks before a new press could be interpreted
-const int NOTPRESSED = -1;             // Arbitrary value denoting that no key was detected (must be less than 0 or greater than 3)
-
-const uint8_t COLS_NUM = 2;           // Amount of column pins = log2(Actual amount of used columns in keypad), rounded up
-const uint8_t ROWS_NUM = 3;           // Amount of row pins 
-const int COLS[COLS_NUM] = {8, 9};          // Define the column pins, green -> left, blue -> right
-const int ROWS[ROWS_NUM] = {21, 20, 10};       // Define the row pins, most significant to the left 
-static const i2s_port_t i2s_num = I2S_NUM_0;  // i2s port number
+    // Keyboard
+    const int MASK1 = 1;                  // Mask for decoding what column to power
+    const int MASK2 = 2;                  // Mask for decoding what column to power
+    
+    const int TICKLENGTH = 20;            // Length of system power tick (in mili-seconds)
+    const int COOLOFF = 200;              // Amount of ticks before a new press could be interpreted
+    const int NOTPRESSED = -1;             // Arbitrary value denoting that no key was detected (must be less than 0 or greater than 3)
+    
+    const uint8_t COLS_NUM = 2;           // Amount of column pins = log2(Actual amount of used columns in keypad), rounded up
+    const uint8_t ROWS_NUM = 3;           // Amount of row pins 
+    const int COLS[COLS_NUM] = {8, 9};          // Define the column pins, green -> left, blue -> right
+    const int ROWS[ROWS_NUM] = {21, 20, 10};       // Define the row pins, most significant to the left 
+    static const i2s_port_t i2s_num = I2S_NUM_0;  // i2s port number
 
 //------------------------------------------------------------------------------------------------------------------------
 
 // Global variables
     // Keypad
-int currentColumn = 0;                        // Storing the current "column cycle"
-bool PRESSED = false;                         // Boolean if a button is pressed
-int pressedTimer = 0;                         // Cooldown of button presses
+    int currentColumn = 0;                        // Storing the current "column cycle"
+    bool PRESSED = false;                         // Boolean if a button is pressed
+    int pressedTimer = 0;                         // Cooldown of button presses
 
     // Wav files
-int fileSize=0;                               // Current played file size 
-File WavFile;                                 // Object for root of SD card directory
+    int fileSize=0;                               // Current played file size 
+    File WavFile;                                 // Object for root of SD card directory
 
     // I2S configuration
 
-i2s_chan_handle_t tx_handle;
-/* Get the default channel configuration by the helper macro.
- * This helper macro is defined in `i2s_common.h` and shared by all the I2S communication modes.
- * It can help to specify the I2S role and port ID */
-i2s_chan_config_t chan_cfg;
-i2s_std_config_t std_cfg;
+    i2s_chan_handle_t tx_handle;
+    /* Get the default channel configuration by the helper macro.
+     * This helper macro is defined in `i2s_common.h` and shared by all the I2S communication modes.
+     * It can help to specify the I2S role and port ID */
+    i2s_chan_config_t chan_cfg;
+    i2s_std_config_t std_cfg;
 
 //------------------------------------------------------------------------------------------------------------------------
 
