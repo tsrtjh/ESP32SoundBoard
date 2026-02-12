@@ -15,7 +15,7 @@
     #define I2S_BCLK    GPIO_NUM_1                // Bit clock
     #define I2S_LRC     GPIO_NUM_0                // Left/Right clock, also known as Frame clock or word select
     #define I2S_NUM     0                         // i2s port number
-    static const i2s_port_t i2s_num = I2S_NUM_0;  // i2s port number
+
 
 
 // Wav File reading
@@ -36,13 +36,13 @@ const int NOTPRESSED = -1;             // Arbitrary value denoting that no key w
 
 const uint8_t COLS_NUM = 2;           // Amount of column pins = log2(Actual amount of used columns in keypad), rounded up
 const uint8_t ROWS_NUM = 3;           // Amount of row pins 
-int COLS[COLS_NUM] = {8, 9};          // Define the column pins, green -> left, blue -> right
-int ROWS[ROWS_NUM] = {21, 20, 10};       // Define the row pins, most significant to the left 
-int currentColumn = 0;                // Storing the current "column cycle"
+const int COLS[COLS_NUM] = {8, 9};          // Define the column pins, green -> left, blue -> right
+const int ROWS[ROWS_NUM] = {21, 20, 10};       // Define the row pins, most significant to the left 
+static const i2s_port_t i2s_num = I2S_NUM_0;  // i2s port number
 
-bool PRESSED = false;
-
-int pressedTimer = 0;
+int currentColumn = 0;                        // Storing the current "column cycle"
+bool PRESSED = false;                         // Boolean if a button is pressed
+int pressedTimer = 0;                         // Cooldown of button presses
 
 //  I2S configuration
 i2s_chan_handle_t tx_handle;
