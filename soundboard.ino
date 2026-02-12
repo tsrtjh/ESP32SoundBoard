@@ -20,7 +20,7 @@
 
 // Wav File reading
     #define NUM_BYTES_TO_READ_FROM_FILE 1024      // How many bytes to read from wav file at a time
-    File WavFile;                                 // Object for root of SD card directory
+
 
 
 // Constants
@@ -40,12 +40,19 @@ const int COLS[COLS_NUM] = {8, 9};          // Define the column pins, green -> 
 const int ROWS[ROWS_NUM] = {21, 20, 10};       // Define the row pins, most significant to the left 
 static const i2s_port_t i2s_num = I2S_NUM_0;  // i2s port number
 
+//------------------------------------------------------------------------------------------------------------------------
+
+// Global variables
+    // Keypad
 int currentColumn = 0;                        // Storing the current "column cycle"
 bool PRESSED = false;                         // Boolean if a button is pressed
 int pressedTimer = 0;                         // Cooldown of button presses
-int fileSize=0;                               // Current played file size  
 
-//  I2S configuration
+    // Wav files
+int fileSize=0;                               // Current played file size 
+File WavFile;                                 // Object for root of SD card directory
+
+    // I2S configuration
 
 i2s_chan_handle_t tx_handle;
 /* Get the default channel configuration by the helper macro.
