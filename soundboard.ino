@@ -11,13 +11,18 @@
     #define SD_CS       7          // SD Card chip select
    
 // I2S
-    #define I2S_DOUT    GPIO_NUM_3    // i2S Data out from ESP32 -> DIN pin
-    #define I2S_BCLK    GPIO_NUM_1    // Bit clock
-    #define I2S_LRC     GPIO_NUM_0    // Left/Right clock, also known as Frame clock or word select
-    #define I2S_NUM     0             // i2s port number
+    #define I2S_DOUT    GPIO_NUM_3                // i2S Data out from ESP32 -> DIN pin
+    #define I2S_BCLK    GPIO_NUM_1                // Bit clock
+    #define I2S_LRC     GPIO_NUM_0                // Left/Right clock, also known as Frame clock or word select
+    #define I2S_NUM     0                         // i2s port number
+    static const i2s_port_t i2s_num = I2S_NUM_0;  // i2s port number
+
 
 // Wav File reading
     #define NUM_BYTES_TO_READ_FROM_FILE 1024    // How many bytes to read from wav file at a time
+    File WavFile;                                 // Object for root of SD card directory
+    int fileSize=0;
+
 // Constants
 
 
@@ -38,6 +43,15 @@ int currentColumn = 0;                // Storing the current "column cycle"
 bool PRESSED = false;
 
 int pressedTimer = 0;
+
+//  I2S configuration
+i2s_chan_handle_t tx_handle;
+/* Get the default channel configuration by the helper macro.
+ * This helper macro is defined in `i2s_common.h` and shared by all the I2S communication modes.
+ * It can help to specify the I2S role and port ID */
+i2s_chan_config_t chan_cfg;
+i2s_std_config_t std_cfg;
+
 
 void setup() {
   // put your setup code here, to run once:
