@@ -25,17 +25,17 @@
 
 // Constants
     // Keyboard
-    const int MASK1 = 1;                  // Mask for decoding what column to power
-    const int MASK2 = 2;                  // Mask for decoding what column to power
+    const int MASK1 = 1;                          // Mask for decoding what column to power
+    const int MASK2 = 2;                          // Mask for decoding what column to power
     
-    const int TICKLENGTH = 20;            // Length of system power tick (in mili-seconds)
-    const int COOLOFF = 200;              // Amount of ticks before a new press could be interpreted
-    const int NOTPRESSED = -1;             // Arbitrary value denoting that no key was detected (must be less than 0 or greater than 3)
+    const int TICKLENGTH = 20;                    // Length of system power tick (in mili-seconds)
+    const int COOLOFF = 200;                      // Amount of ticks before a new press could be interpreted
+    const int NOTPRESSED = -1;                    // Arbitrary value denoting that no key was detected (must be less than 0 or greater than 3)
     
-    const uint8_t COLS_NUM = 2;           // Amount of column pins = log2(Actual amount of used columns in keypad), rounded up
-    const uint8_t ROWS_NUM = 3;           // Amount of row pins 
-    const int COLS[COLS_NUM] = {8, 9};          // Define the column pins, green -> left, blue -> right
-    const int ROWS[ROWS_NUM] = {21, 20, 10};       // Define the row pins, most significant to the left 
+    const uint8_t COLS_NUM = 2;                   // Amount of column pins = log2(Actual amount of used columns in keypad), rounded up
+    const uint8_t ROWS_NUM = 3;                   // Amount of row pins 
+    const int COLS[COLS_NUM] = {8, 9};            // Define the column pins, green -> left, blue -> right
+    const int ROWS[ROWS_NUM] = {21, 20, 10};      // Define the row pins, most significant to the left 
     static const i2s_port_t i2s_num = I2S_NUM_0;  // i2s port number
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -65,24 +65,24 @@
  struct WavHeader_Struct
       {
           //   RIFF Section    
-          char RIFFSectionID[4];      // Letters "RIFF"
-          uint32_t Size;              // Size of entire file less 8
-          char RiffFormat[4];         // Letters "WAVE"
+          char RIFFSectionID[4];                  // Letters "RIFF"
+          uint32_t Size;                          // Size of entire file less 8
+          char RiffFormat[4];                     // Letters "WAVE"
           
           //   Format Section    
-          char FormatSectionID[4];    // letters "fmt"
-          uint32_t FormatSize;        // Size of format section less 8
-          uint16_t FormatID;          // 1=uncompressed PCM
-          uint16_t NumChannels;       // 1=mono,2=stereo
-          uint32_t SampleRate;        // 44100, 16000, 8000 etc.
-          uint32_t ByteRate;          // =SampleRate * Channels * (BitsPerSample/8)
-          uint16_t BlockAlign;        // =Channels * (BitsPerSample/8)
-          uint16_t BitsPerSample;     // 8,16,24 or 32
+          char FormatSectionID[4];                // letters "fmt"
+          uint32_t FormatSize;                    // Size of format section less 8
+          uint16_t FormatID;                      // 1=uncompressed PCM
+          uint16_t NumChannels;                   // 1=mono,2=stereo
+          uint32_t SampleRate;                    // 44100, 16000, 8000 etc.
+          uint32_t ByteRate;                      // =SampleRate * Channels * (BitsPerSample/8)
+          uint16_t BlockAlign;                    // =Channels * (BitsPerSample/8)
+          uint16_t BitsPerSample;                 // 8,16,24 or 32
         
 
           // Data Section
-          char DataSectionID[4];      // The letters "data"
-          uint32_t DataSize;          // Size of the data that follows
+          char DataSectionID[4];                  // The letters "data"
+          uint32_t DataSize;                      // Size of the data that follows
       }WavHeader;
 //------------------------------------------------------------------------------------------------------------------------
 
