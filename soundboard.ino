@@ -111,7 +111,7 @@ void loop() {
   // Serial.print(on1 + on2*2);
   // Serial.print(", IN BIN: ");
   // Serial.println(inBin);
-  delay(20);
+  delay(TICKLENGTH);
   currentColumn = (currentColumn + 1) % 4;
  
 }
