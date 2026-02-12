@@ -1,24 +1,22 @@
 // Includes
 
-    #include "SD.h"                         // SD Card library, usually part of the standard install
-    #include "driver/i2s_std.h"                 // Library of I2S routines, comes with ESP32 standard install
+    #include "SD.h"                               // SD Card library, usually part of the standard install
+    #include "driver/i2s_std.h"                   // Library of I2S routines, comes with ESP32 standard install
     #include "driver/gpio.h"
-    #include "SPI.h"
+    #include "SPI.h"                              // I don't know if it's necessary
 
 //------------------------------------------------------------------------------------------------------------------------
 
 // Definitions
 
     // SD Card
-    #define SD_CS       7          // SD Card chip select
+    #define SD_CS       7                         // SD Card chip select
    
     // I2S
     #define I2S_DOUT    GPIO_NUM_3                // i2S Data out from ESP32 -> DIN pin
     #define I2S_BCLK    GPIO_NUM_1                // Bit clock
     #define I2S_LRC     GPIO_NUM_0                // Left/Right clock, also known as Frame clock or word select
     #define I2S_NUM     0                         // i2s port number
-
-
 
     // Wav File reading
     #define NUM_BYTES_TO_READ_FROM_FILE 1024      // How many bytes to read from wav file at a time
