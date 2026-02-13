@@ -202,11 +202,6 @@ void keyboardRoutine(){
       delay(200);
     }
   }else{
-    //If pressed
-    // Serial.print(pressedTimer);
-    // Serial.print("/");
-    // Serial.print(COOLOFF);
-    // Serial.println(" cool-off cycle");
     pressedTimer = pressedTimer + 1;
     
     //if timer is over cooloff limit
@@ -215,29 +210,12 @@ void keyboardRoutine(){
       PRESSED = false;
     }
   }
-
-
-  
-  //Read from the board
-
-
-  //Convert input from board to binary
-  // String inBin = "";
-  // for (int i = 0; i<4; i++){
-  //   inBin += vin[i];
-  // }
-
-  // Serial.print("ON 1: ");
-  // Serial.print(on1);
-  // Serial.print(", ON 2: ");
-  // Serial.print(on2);
-  // Serial.print(", ON #: ");
-  // Serial.print(on1 + on2*2);
-  // Serial.print(", IN BIN: ");
-  // Serial.println(inBin);
+    
+  // Decopling delay
   delay(TICKLENGTH);
+    
+  // Checking next column
   currentColumn = (currentColumn + 1) % 4;
-
 }
 
 
@@ -264,8 +242,7 @@ void PlayWav()
                                                       // routine again and again until it returns true.
 }
 
-uint16_t ReadFile(byte* Samples)
-{
+uint16_t ReadFile(byte* Samples){
     static uint32_t BytesReadSoFar=0;                   // Number of bytes read from file so far
     uint16_t BytesToRead;                               // Number of bytes to read from the file
     
@@ -293,15 +270,14 @@ uint16_t ReadFile(byte* Samples)
     }
     
     // File done reading
-    if(BytesReadSoFar > fileSize - NUM_BYTES_TO_READ_FROM_FILE){
+    if(BytesReadSoFar >= fileSize - NUM_BYTES_TO_READ_FROM_FILE){
       Serial.println("Done reading file!");
       PRESSED = false;
     }
     return BytesToRead;                                 // return the number of bytes read into buffer
 }
 
-bool FillI2SBuffer(byte* Samples,uint16_t BytesInBuffer)
-{
+bool FillI2SBuffer(byte* Samples,uint16_t BytesInBuffer){
     // Writes bytes to buffer, returns true if all bytes sent else false, keeps track itself of how many left
     // to write, so just keep calling this routine until returns true to know they've all been written, then
     // you can re-fill the buffer
