@@ -3,7 +3,7 @@
     #include "SD.h"                               // SD Card library, usually part of the standard install
     #include "driver/i2s_std.h"                   // Library of I2S routines, comes with ESP32 standard install
     #include "driver/gpio.h"
-    #include "SPI.h"                              // I don't know if it's necessary
+    //include "SPI.h"                              // I don't know if it's necessary
     #include "Soundboard.h"
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -82,8 +82,45 @@
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-
   Serial.println("Starting!");
+  SDCardInit();
+  keyboardInit();
+  Serial.println("initializing i2s TX channel");
+  i2s_new_channel(&chan_cfg, &tx_handle, NULL);
+  i2s_channel_init_std_mode(tx_handle, &std_cfg);
+  i2s_channel_enable(tx_handle);
+
+  // i2s_driver_install(i2s_num, &std_cfg, 0, NULL);
+  // i2s_set_pin(i2s_num, &pin_config);
+  // get the wav file from the SD card
+  WavFile = SD.open("/2_new.wav");                   // Open the wav file
+  if(WavFile==false){
+    Serial.println("Could not open '1.wav'");
+  }else{
+    WavFile.read((byte *) &WavHeader,44);               // Read in the WAV header, which is first 44 bytes of the file. 
+                                                        // We have to typecast to bytes for the "read" function
+    DumpWAVHeader(&WavHeader);                          // Dump the header data to serial, optional!
+    if(ValidWavData(&WavHeader))                        // optional if your sure the WAV file will be valid.
+      Serial.print("Wav header good, sample rate: ");
+      Serial.println(WavHeader.SampleRate);
+      fileSize=WavHeader.DataSize;
+      //i2s_set_sample_rates(i2s_num, WavHeader.SampleRate);      //set sample rate
+      //std_cfg.clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(WavHeader.SampleRate);
+  }
+}
+
+void loop() {
+    if(!PRESSED){
+      keyboardRoutine();
+    }else{
+      PlayWav();
+    }
+
+ 
+}
+
+void keyboardInit(){
+  Serial.println("Initializing Keyboard");
   //Initializing columns
   for(int i = 0; i<COLS_NUM; i++){
     pinMode(COLS[i], OUTPUT);
@@ -94,8 +131,48 @@ void setup() {
   }
 }
 
-void loop() {
+void I2SInit(){
 
+
+}
+
+void powerCols(int currentColumn){
+  int STATE[COLS_NUM];
+  if(0 <= currentColumn && currentColumn <= 3){
+    STATE[0] = (currentColumn & MASK1);
+    STATE[1] = (currentColumn & MASK2);
+  }else{
+    Serial.println("Current column out of bounds");
+    return;
+  }
+
+  //Write to the board
+  for(int i = 0; i<COLS_NUM; i++){
+    digitalWrite(COLS[i], STATE[i]);
+  }
+
+}
+
+int readRows(){
+  int totalNum=0;
+  for(int i = 0; i<ROWS_NUM; i++){
+    totalNum *= 2;
+    Serial.print("Checking pin #");
+    Serial.print(ROWS[i]);
+    Serial.print(" in row #");
+    Serial.print(i+1);
+    Serial.print(" read ");
+    int digRead = digitalRead(ROWS[i]);
+    Serial.println(digRead);
+    totalNum += digRead;
+    Serial.println(totalNum);
+  }
+  Serial.println("");
+  return (totalNum - 1);
+}
+
+void keyboardRoutine(){
+    
   //Power columns
   powerCols(currentColumn);
 
@@ -153,42 +230,7 @@ void loop() {
   // Serial.println(inBin);
   delay(TICKLENGTH);
   currentColumn = (currentColumn + 1) % 4;
- 
-}
 
-void powerCols(int currentColumn){
-  int STATE[COLS_NUM];
-  if(0 <= currentColumn && currentColumn <= 3){
-    STATE[0] = (currentColumn & MASK1);
-    STATE[1] = (currentColumn & MASK2);
-  }else{
-    Serial.println("Current column out of bounds");
-    return;
-  }
-
-  //Write to the board
-  for(int i = 0; i<COLS_NUM; i++){
-    digitalWrite(COLS[i], STATE[i]);
-  }
-
-}
-
-int readRows(){
-  int totalNum=0;
-  for(int i = 0; i<ROWS_NUM; i++){
-    totalNum *= 2;
-    Serial.print("Checking pin #");
-    Serial.print(ROWS[i]);
-    Serial.print(" in row #");
-    Serial.print(i+1);
-    Serial.print(" read ");
-    int digRead = digitalRead(ROWS[i]);
-    Serial.println(digRead);
-    totalNum += digRead;
-    Serial.println(totalNum);
-  }
-  Serial.println("");
-  return (totalNum - 1);
 }
 
 
@@ -277,8 +319,8 @@ void SDCardInit(){
     //Serial.println(SD_CS);
     //pinMode(SD_CS, OUTPUT); 
     //digitalWrite(SD_CS, HIGH); // SD card chips select, must use GPIO 5 (ESP32 SS)
-    if(!SD.begin(SD_CS))
-    {
+    Serial.println("SD card initializing");
+    if(!SD.begin(SD_CS)){
         Serial.println("Error talking to SD card!");
         while(true);                  // end program
     }else{
