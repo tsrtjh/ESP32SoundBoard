@@ -169,7 +169,9 @@ int readRows(){
       Serial.println(totalNum);
     }
   }
-  Serial.println("");
+  if(DEBUGGING){
+    Serial.println("");
+  }
   return (totalNum - 1);
 }
 
