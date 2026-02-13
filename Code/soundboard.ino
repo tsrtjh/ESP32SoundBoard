@@ -95,7 +95,47 @@ void setup() {
 }
 
 void loop() {
+    keyboardRoutine();
+ 
+}
 
+void powerCols(int currentColumn){
+  int STATE[COLS_NUM];
+  if(0 <= currentColumn && currentColumn <= 3){
+    STATE[0] = (currentColumn & MASK1);
+    STATE[1] = (currentColumn & MASK2);
+  }else{
+    Serial.println("Current column out of bounds");
+    return;
+  }
+
+  //Write to the board
+  for(int i = 0; i<COLS_NUM; i++){
+    digitalWrite(COLS[i], STATE[i]);
+  }
+
+}
+
+int readRows(){
+  int totalNum=0;
+  for(int i = 0; i<ROWS_NUM; i++){
+    totalNum *= 2;
+    Serial.print("Checking pin #");
+    Serial.print(ROWS[i]);
+    Serial.print(" in row #");
+    Serial.print(i+1);
+    Serial.print(" read ");
+    int digRead = digitalRead(ROWS[i]);
+    Serial.println(digRead);
+    totalNum += digRead;
+    Serial.println(totalNum);
+  }
+  Serial.println("");
+  return (totalNum - 1);
+}
+
+void keyboardRoutine(){
+    
   //Power columns
   powerCols(currentColumn);
 
@@ -153,42 +193,7 @@ void loop() {
   // Serial.println(inBin);
   delay(TICKLENGTH);
   currentColumn = (currentColumn + 1) % 4;
- 
-}
 
-void powerCols(int currentColumn){
-  int STATE[COLS_NUM];
-  if(0 <= currentColumn && currentColumn <= 3){
-    STATE[0] = (currentColumn & MASK1);
-    STATE[1] = (currentColumn & MASK2);
-  }else{
-    Serial.println("Current column out of bounds");
-    return;
-  }
-
-  //Write to the board
-  for(int i = 0; i<COLS_NUM; i++){
-    digitalWrite(COLS[i], STATE[i]);
-  }
-
-}
-
-int readRows(){
-  int totalNum=0;
-  for(int i = 0; i<ROWS_NUM; i++){
-    totalNum *= 2;
-    Serial.print("Checking pin #");
-    Serial.print(ROWS[i]);
-    Serial.print(" in row #");
-    Serial.print(i+1);
-    Serial.print(" read ");
-    int digRead = digitalRead(ROWS[i]);
-    Serial.println(digRead);
-    totalNum += digRead;
-    Serial.println(totalNum);
-  }
-  Serial.println("");
-  return (totalNum - 1);
 }
 
 
