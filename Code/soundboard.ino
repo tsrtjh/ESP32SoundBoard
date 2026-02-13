@@ -39,8 +39,9 @@
     const int ROWS[ROWS_NUM] = {21, 20, 10};      // Define the row pins, most significant to the left 
     static const i2s_port_t i2s_num = I2S_NUM_0;  // i2s port number
 
-    const bool DEBUGGING = false;
-
+    // Debugging with serial
+    const bool KB_DEBUG = false;
+    const bool I2S_DEBUG = true;
 //------------------------------------------------------------------------------------------------------------------------
 
 // Global variables
@@ -159,7 +160,7 @@ int readRows(){
     totalNum *= 2;
     int digRead = digitalRead(ROWS[i]);
     totalNum += digRead;
-    if(DEBUGGING){
+    if(KB_DEBUG){
       Serial.print("Checking pin #");
       Serial.print(ROWS[i]);
       Serial.print(" in row #");
@@ -169,7 +170,7 @@ int readRows(){
       Serial.println(totalNum);
     }
   }
-  if(DEBUGGING){
+  if(KB_DEBUG){
     Serial.println("");
   }
   return (totalNum - 1);
@@ -183,7 +184,7 @@ void keyboardRoutine(){
   //Read from rows
   if(!PRESSED){
     int currentRow = readRows();
-    if(DEBUGGING){
+    if(KB_DEBUG){
       Serial.print("Current Row: ");
       Serial.println(currentRow);
       Serial.println("----------\n");
@@ -281,14 +282,18 @@ uint16_t ReadFile(byte* Samples)
       WavFile.seek(44);                                 // Reset to start of wav data  
       BytesReadSoFar=0;                                 // Clear to no bytes read in so far                            
     }
-    Serial.print("Bytes read so far: ");
-    Serial.println(BytesReadSoFar);
-    Serial.print("Bytes %: ");
-    Serial.print(BytesReadSoFar*100/fileSize);
-    Serial.println("%");
+    if(I2S_DEBUG){
+      Serial.print("File Size: ");
+      Serial.println(fileSize);
+      Serial.print("Bytes read so far: ");
+      Serial.println(BytesReadSoFar);
+      Serial.print("Bytes %: ");
+      Serial.print(BytesReadSoFar*100/fileSize);
+     Serial.println("%");
+    }
     
     // File done reading
-    if(BytesReadSoFar > fileSize){
+    if(BytesReadSoFar > fileSize - NUM_BYTES_TO_READ_FROM_FILE){
       Serial.println("Done reading file!");
       PRESSED = false;
     }
