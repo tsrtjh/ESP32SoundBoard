@@ -39,6 +39,9 @@
     const int ROWS[ROWS_NUM] = {21, 20, 10};      // Define the row pins, most significant to the left 
     static const i2s_port_t i2s_num = I2S_NUM_0;  // i2s port number
 
+    // Debugging with serial
+    const bool KB_DEBUG = false;
+    const bool I2S_DEBUG = true;
 //------------------------------------------------------------------------------------------------------------------------
 
 // Global variables
@@ -57,7 +60,7 @@
     /* Get the default channel configuration by the helper macro.
      * This helper macro is defined in `i2s_common.h` and shared by all the I2S communication modes.
      * It can help to specify the I2S role and port ID */
-    i2s_chan_config_t chan_cfg;
+    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
     i2s_std_config_t std_cfg = {
         .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(44100), //48000
         .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO),
@@ -115,8 +118,6 @@ void loop() {
     }else{
       PlayWav();
     }
-
- 
 }
 
 void keyboardInit(){
@@ -157,17 +158,21 @@ int readRows(){
   int totalNum=0;
   for(int i = 0; i<ROWS_NUM; i++){
     totalNum *= 2;
-    Serial.print("Checking pin #");
-    Serial.print(ROWS[i]);
-    Serial.print(" in row #");
-    Serial.print(i+1);
-    Serial.print(" read ");
     int digRead = digitalRead(ROWS[i]);
-    Serial.println(digRead);
     totalNum += digRead;
-    Serial.println(totalNum);
+    if(KB_DEBUG){
+      Serial.print("Checking pin #");
+      Serial.print(ROWS[i]);
+      Serial.print(" in row #");
+      Serial.print(i+1);
+      Serial.print(" read ");
+      Serial.println(digRead);
+      Serial.println(totalNum);
+    }
   }
-  Serial.println("");
+  if(KB_DEBUG){
+    Serial.println("");
+  }
   return (totalNum - 1);
 }
 
@@ -179,10 +184,12 @@ void keyboardRoutine(){
   //Read from rows
   if(!PRESSED){
     int currentRow = readRows();
-    Serial.print("Current Row: ");
-    Serial.println(currentRow);
-    Serial.println("----------\n");
-    
+    if(KB_DEBUG){
+      Serial.print("Current Row: ");
+      Serial.println(currentRow);
+      Serial.println("----------\n");
+    }
+
     //If match found!    
     if(currentRow != NOTPRESSED){
       Serial.print("Found match on row #");
@@ -195,11 +202,6 @@ void keyboardRoutine(){
       delay(200);
     }
   }else{
-    //If pressed
-    // Serial.print(pressedTimer);
-    // Serial.print("/");
-    // Serial.print(COOLOFF);
-    // Serial.println(" cool-off cycle");
     pressedTimer = pressedTimer + 1;
     
     //if timer is over cooloff limit
@@ -208,29 +210,12 @@ void keyboardRoutine(){
       PRESSED = false;
     }
   }
-
-
-  
-  //Read from the board
-
-
-  //Convert input from board to binary
-  // String inBin = "";
-  // for (int i = 0; i<4; i++){
-  //   inBin += vin[i];
-  // }
-
-  // Serial.print("ON 1: ");
-  // Serial.print(on1);
-  // Serial.print(", ON 2: ");
-  // Serial.print(on2);
-  // Serial.print(", ON #: ");
-  // Serial.print(on1 + on2*2);
-  // Serial.print(", IN BIN: ");
-  // Serial.println(inBin);
+    
+  // Decopling delay
   delay(TICKLENGTH);
+    
+  // Checking next column
   currentColumn = (currentColumn + 1) % 4;
-
 }
 
 
@@ -257,8 +242,7 @@ void PlayWav()
                                                       // routine again and again until it returns true.
 }
 
-uint16_t ReadFile(byte* Samples)
-{
+uint16_t ReadFile(byte* Samples){
     static uint32_t BytesReadSoFar=0;                   // Number of bytes read from file so far
     uint16_t BytesToRead;                               // Number of bytes to read from the file
     
@@ -275,16 +259,25 @@ uint16_t ReadFile(byte* Samples)
       WavFile.seek(44);                                 // Reset to start of wav data  
       BytesReadSoFar=0;                                 // Clear to no bytes read in so far                            
     }
-    // Serial.print("Bytes read so far: ");
-    // Serial.println(BytesReadSoFar);
-    // Serial.print("Bytes %: ");
-    // Serial.print(BytesReadSoFar*100/fileSize);
-    // Serial.println("%");
+    if(I2S_DEBUG){
+      Serial.print("File Size: ");
+      Serial.println(fileSize);
+      Serial.print("Bytes read so far: ");
+      Serial.println(BytesReadSoFar);
+      Serial.print("Bytes %: ");
+      Serial.print(BytesReadSoFar*100/fileSize);
+     Serial.println("%");
+    }
+    
+    // File done reading
+    if(BytesReadSoFar >= fileSize - NUM_BYTES_TO_READ_FROM_FILE){
+      Serial.println("Done reading file!");
+      PRESSED = false;
+    }
     return BytesToRead;                                 // return the number of bytes read into buffer
 }
 
-bool FillI2SBuffer(byte* Samples,uint16_t BytesInBuffer)
-{
+bool FillI2SBuffer(byte* Samples,uint16_t BytesInBuffer){
     // Writes bytes to buffer, returns true if all bytes sent else false, keeps track itself of how many left
     // to write, so just keep calling this routine until returns true to know they've all been written, then
     // you can re-fill the buffer
