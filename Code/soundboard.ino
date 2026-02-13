@@ -281,11 +281,17 @@ uint16_t ReadFile(byte* Samples)
       WavFile.seek(44);                                 // Reset to start of wav data  
       BytesReadSoFar=0;                                 // Clear to no bytes read in so far                            
     }
-    // Serial.print("Bytes read so far: ");
-    // Serial.println(BytesReadSoFar);
-    // Serial.print("Bytes %: ");
-    // Serial.print(BytesReadSoFar*100/fileSize);
-    // Serial.println("%");
+    Serial.print("Bytes read so far: ");
+    Serial.println(BytesReadSoFar);
+    Serial.print("Bytes %: ");
+    Serial.print(BytesReadSoFar*100/fileSize);
+    Serial.println("%");
+    
+    // File done reading
+    if(BytesReadSoFar > fileSize){
+      Serial.println("Done reading file!");
+      PRESSED = false;
+    }
     return BytesToRead;                                 // return the number of bytes read into buffer
 }
 
