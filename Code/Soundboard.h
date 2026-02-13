@@ -1,5 +1,5 @@
-#ifndef SOUNDBOARD_H
-#define SOUNDBOARD_H
+#ifndef Soundboard
+#define Soundboard
 
 struct WavHeader_Struct{
 //   RIFF Section    
