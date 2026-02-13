@@ -39,6 +39,8 @@
     const int ROWS[ROWS_NUM] = {21, 20, 10};      // Define the row pins, most significant to the left 
     static const i2s_port_t i2s_num = I2S_NUM_0;  // i2s port number
 
+    const bool DEBUGGING = false;
+
 //------------------------------------------------------------------------------------------------------------------------
 
 // Global variables
@@ -115,8 +117,6 @@ void loop() {
     }else{
       PlayWav();
     }
-
- 
 }
 
 void keyboardInit(){
@@ -157,15 +157,17 @@ int readRows(){
   int totalNum=0;
   for(int i = 0; i<ROWS_NUM; i++){
     totalNum *= 2;
-    Serial.print("Checking pin #");
-    Serial.print(ROWS[i]);
-    Serial.print(" in row #");
-    Serial.print(i+1);
-    Serial.print(" read ");
     int digRead = digitalRead(ROWS[i]);
-    Serial.println(digRead);
     totalNum += digRead;
-    Serial.println(totalNum);
+    if(DEBUGGING){
+      Serial.print("Checking pin #");
+      Serial.print(ROWS[i]);
+      Serial.print(" in row #");
+      Serial.print(i+1);
+      Serial.print(" read ");
+      Serial.println(digRead);
+      Serial.println(totalNum);
+    }
   }
   Serial.println("");
   return (totalNum - 1);
@@ -179,10 +181,12 @@ void keyboardRoutine(){
   //Read from rows
   if(!PRESSED){
     int currentRow = readRows();
-    Serial.print("Current Row: ");
-    Serial.println(currentRow);
-    Serial.println("----------\n");
-    
+    if(DEBUGGING){
+      Serial.print("Current Row: ");
+      Serial.println(currentRow);
+      Serial.println("----------\n");
+    }
+
     //If match found!    
     if(currentRow != NOTPRESSED){
       Serial.print("Found match on row #");
