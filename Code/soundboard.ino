@@ -3,7 +3,6 @@
     #include "SD.h"                               // SD Card library, usually part of the standard install
     #include "driver/i2s_std.h"                   // Library of I2S routines, comes with ESP32 standard install
     #include "driver/gpio.h"
-    //include "SPI.h"                              // I don't know if it's necessary
     #include "Soundboard.h"
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -53,6 +52,7 @@
     // Wav files
     int fileSize=0;                               // Current played file size 
     File WavFile;                                 // Object for root of SD card directory
+    bool FILE_LOADED = false;
 
     // I2S configuration
 
@@ -88,35 +88,18 @@ void setup() {
   Serial.println("Starting!");
   SDCardInit();
   keyboardInit();
-  Serial.println("initializing i2s TX channel");
-  i2s_new_channel(&chan_cfg, &tx_handle, NULL);
-  i2s_channel_init_std_mode(tx_handle, &std_cfg);
-  i2s_channel_enable(tx_handle);
-
-  // i2s_driver_install(i2s_num, &std_cfg, 0, NULL);
-  // i2s_set_pin(i2s_num, &pin_config);
-  // get the wav file from the SD card
-  WavFile = SD.open("/2_new.wav");                   // Open the wav file
-  if(WavFile==false){
-    Serial.println("Could not open '1.wav'");
-  }else{
-    WavFile.read((byte *) &WavHeader,44);               // Read in the WAV header, which is first 44 bytes of the file. 
-                                                        // We have to typecast to bytes for the "read" function
-    DumpWAVHeader(&WavHeader);                          // Dump the header data to serial, optional!
-    if(ValidWavData(&WavHeader))                        // optional if your sure the WAV file will be valid.
-      Serial.print("Wav header good, sample rate: ");
-      Serial.println(WavHeader.SampleRate);
-      fileSize=WavHeader.DataSize;
-      //i2s_set_sample_rates(i2s_num, WavHeader.SampleRate);      //set sample rate
-      //std_cfg.clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(WavHeader.SampleRate);
-  }
+  I2SInit();
 }
 
 void loop() {
     if(!PRESSED){
       keyboardRoutine();
     }else{
-      PlayWav();
+      if(!FILE_LOADED){
+        FILE_LOADED = loadWavFile("/dong_48000.wav");
+      }else{
+        PlayWav();
+      }
     }
 }
 
@@ -133,8 +116,10 @@ void keyboardInit(){
 }
 
 void I2SInit(){
-
-
+  Serial.println("initializing i2s TX channel");
+  i2s_new_channel(&chan_cfg, &tx_handle, NULL);
+  i2s_channel_init_std_mode(tx_handle, &std_cfg);
+  i2s_channel_enable(tx_handle);
 }
 
 void powerCols(int currentColumn){
@@ -218,6 +203,27 @@ void keyboardRoutine(){
   currentColumn = (currentColumn + 1) % 4;
 }
 
+bool loadWavFile(String fileName){
+  
+  // get the wav file from the SD card
+  WavFile = SD.open(fileName);                          // Open the wav file
+  if(WavFile==false){
+    Serial.print("Could not open ");
+    Serial.print(fileName);
+  }else{
+    WavFile.read((byte *) &WavHeader,44);               // Read in the WAV header, which is first 44 bytes of the file. 
+                                                        // We have to typecast to bytes for the "read" function
+    DumpWAVHeader(&WavHeader);                          // Dump the header data to serial, optional!
+    if(ValidWavData(&WavHeader))                        // optional if your sure the WAV file will be valid.
+      Serial.print("Wav header good, sample rate: ");
+      Serial.println(WavHeader.SampleRate);
+      fileSize=WavHeader.DataSize;
+      //i2s_set_sample_rates(i2s_num, WavHeader.SampleRate);      //set sample rate
+      //std_cfg.clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(WavHeader.SampleRate);
+  }
+  Serial.println(WavFile == false);
+  return !(WavFile == false);
+}
 
 void PlayWav()
 {
@@ -273,6 +279,7 @@ uint16_t ReadFile(byte* Samples){
     if(BytesReadSoFar >= fileSize - NUM_BYTES_TO_READ_FROM_FILE){
       Serial.println("Done reading file!");
       PRESSED = false;
+      FILE_LOADED = false;
     }
     return BytesToRead;                                 // return the number of bytes read into buffer
 }
