@@ -40,14 +40,15 @@
     static const i2s_port_t i2s_num = I2S_NUM_0;  // i2s port number
 
     // Keyboard wav file names array
-    const String WAV_ARRAY[WAV_ARRAY_SIZE] = {"/dong_48000.wav", "/dong_48000.wav", "/Lame_Boom.wav", "",
-                                  "", "", "", "",
+    const String WAV_ARRAY[WAV_ARRAY_SIZE] = {"/dong_48000.wav", "/goofy_ahh1.wav", "/Lame_Boom.wav", "/sus.wav",
+                                  "/good_boom.wav", "/wait_a_minute_who_are_you.wav", "/choir_ohh.wav", "",
                                   "", "", "", "",
                                   "", "", "", ""};
 
     // Debugging with serial
     const bool KB_DEBUG = false;                  // Debugging Keyboard presses
-    const bool I2S_DEBUG = true;                  // Debugging I2S file reading
+    const bool I2S_DEBUG = false;                  // Debugging I2S file reading
+    const bool WAV_DEBUG = false;
 //------------------------------------------------------------------------------------------------------------------------
 
 // Global variables
@@ -251,8 +252,9 @@ bool loadWavFile(String fileName){
       Serial.print("Wav header good, sample rate: ");
       Serial.println(WavHeader.SampleRate);
       FileSize=WavHeader.DataSize;
+      Serial.print("Successfully opened file: ");
+      Serial.println(fileName);
   }
-  Serial.println(WavFile == false);
   return !(WavFile == false);
 }
 
@@ -417,15 +419,17 @@ void DumpWAVHeader(WavHeader_Struct* Wav)
     return;
   }  
   // All looks good, dump the data
-  Serial.print("Total size :");Serial.println(Wav->Size);
-  Serial.print("Format section size :");Serial.println(Wav->FormatSize);
-  Serial.print("Wave format :");Serial.println(Wav->FormatID);
-  Serial.print("Channels :");Serial.println(Wav->NumChannels);
-  Serial.print("Sample Rate :");Serial.println(Wav->SampleRate);
-  Serial.print("Byte Rate :");Serial.println(Wav->ByteRate);
-  Serial.print("Block Align :");Serial.println(Wav->BlockAlign);
-  Serial.print("Bits Per Sample :");Serial.println(Wav->BitsPerSample);
-  Serial.print("Data Size :");Serial.println(Wav->DataSize);
+  if(WAV_DEBUG){
+    Serial.print("Total size :");Serial.println(Wav->Size);
+    Serial.print("Format section size :");Serial.println(Wav->FormatSize);
+    Serial.print("Wave format :");Serial.println(Wav->FormatID);
+    Serial.print("Channels :");Serial.println(Wav->NumChannels);
+    Serial.print("Sample Rate :");Serial.println(Wav->SampleRate);
+    Serial.print("Byte Rate :");Serial.println(Wav->ByteRate);
+    Serial.print("Block Align :");Serial.println(Wav->BlockAlign);
+    Serial.print("Bits Per Sample :");Serial.println(Wav->BitsPerSample);
+    Serial.print("Data Size :");Serial.println(Wav->DataSize);
+  }
 }
 
 void PrintData(const char* Data,uint8_t NumBytes){
