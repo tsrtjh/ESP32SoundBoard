@@ -59,7 +59,7 @@
     /* Get the default channel configuration by the helper macro.
      * This helper macro is defined in `i2s_common.h` and shared by all the I2S communication modes.
      * It can help to specify the I2S role and port ID */
-    i2s_chan_config_t chan_cfg;
+    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
     i2s_std_config_t std_cfg = {
         .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(44100), //48000
         .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO),
