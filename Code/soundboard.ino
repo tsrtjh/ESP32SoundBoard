@@ -97,6 +97,8 @@ void setup() {
   SDCardInit();
   keyboardInit();
   I2SInit();
+  
+  // Print all WAV files in array
   for(int i = 0; i<WAV_ARRAY_SIZE; i++){
     Serial.print(i);
     Serial.print(" :\"");
@@ -147,44 +149,8 @@ void I2SInit(){
   i2s_channel_enable(TX_Handle);
 }
 
-void powerCols(int currentColumn){
-  int STATE[COLS_NUM];
-  if(0 <= currentColumn && currentColumn <= 3){
-    STATE[0] = (currentColumn & MASK1);
-    STATE[1] = (currentColumn & MASK2);
-  }else{
-    Serial.println("Current column out of bounds");
-    return;
-  }
 
-  //Write to the board
-  for(int i = 0; i<COLS_NUM; i++){
-    digitalWrite(COLS[i], STATE[i]);
-  }
-
-}
-
-int readRows(){
-  int totalNum=0;
-  for(int i = 0; i<ROWS_NUM; i++){
-    totalNum *= 2;
-    int digRead = digitalRead(ROWS[i]);
-    totalNum += digRead;
-    if(KB_DEBUG){
-      Serial.print("Checking pin #");
-      Serial.print(ROWS[i]);
-      Serial.print(" in row #");
-      Serial.print(i+1);
-      Serial.print(" read ");
-      Serial.println(digRead);
-      Serial.println(totalNum);
-    }
-  }
-  if(KB_DEBUG){
-    Serial.println("");
-  }
-  return (totalNum - 1);
-}
+// Loop functions
 
 void keyboardRoutine(){
   
@@ -236,6 +202,27 @@ void keyboardRoutine(){
   CurrentColumn = (CurrentColumn + 1) % 4;
 }
 
+void PlayWav(){
+  static bool ReadingFile=true;                   // True if reading file from SD. false if filling I2S buffer
+  static byte Samples[NUM_BYTES_TO_READ_FROM_FILE]; // Memory allocated to store the data read in from the wav file
+  static uint16_t BytesRead;                      // Num bytes actually read from the wav file which will either be
+                                                  // NUM_BYTES_TO_READ_FROM_FILE or less than this if we are very
+                                                  // near the end of the file. i.e. we can't read beyond the file.
+
+  if(ReadingFile)                                 // Read next chunk of data in from file if needed
+  {
+    BytesRead=ReadFile(Samples);                  // Read data into our memory buffer, return num bytes read in
+    ReadingFile=false;                            // Switch to sending the buffer to the I2S
+  }
+  else
+    ReadingFile=FillI2SBuffer(Samples,BytesRead); // We keep calling this routine until it returns true, at which point
+                                                  // this will swap us back to Reading the next block of data from the file.
+                                                  // Reading true means it has managed to push all the data to the I2S 
+                                                  // Handler, false means there still more to do and you should call this
+                                                  // routine again and again until it returns true.
+}
+
+
 bool loadWavFile(String fileName){
   
   // get the wav file from the SD card
@@ -258,25 +245,45 @@ bool loadWavFile(String fileName){
   return !(WavFile == false);
 }
 
-void PlayWav()
-{
-  static bool ReadingFile=true;                   // True if reading file from SD. false if filling I2S buffer
-  static byte Samples[NUM_BYTES_TO_READ_FROM_FILE]; // Memory allocated to store the data read in from the wav file
-  static uint16_t BytesRead;                      // Num bytes actually read from the wav file which will either be
-                                                  // NUM_BYTES_TO_READ_FROM_FILE or less than this if we are very
-                                                  // near the end of the file. i.e. we can't read beyond the file.
+// Helper functions
 
-  if(ReadingFile)                                 // Read next chunk of data in from file if needed
-  {
-    BytesRead=ReadFile(Samples);                  // Read data into our memory buffer, return num bytes read in
-    ReadingFile=false;                            // Switch to sending the buffer to the I2S
+void powerCols(int currentColumn){
+  int STATE[COLS_NUM];
+  if(0 <= currentColumn && currentColumn <= 3){
+    STATE[0] = (currentColumn & MASK1);
+    STATE[1] = (currentColumn & MASK2);
+  }else{
+    Serial.println("Current column out of bounds");
+    return;
   }
-  else
-    ReadingFile=FillI2SBuffer(Samples,BytesRead); // We keep calling this routine until it returns true, at which point
-                                                  // this will swap us back to Reading the next block of data from the file.
-                                                  // Reading true means it has managed to push all the data to the I2S 
-                                                  // Handler, false means there still more to do and you should call this
-                                                  // routine again and again until it returns true.
+
+  //Write to the board
+  for(int i = 0; i<COLS_NUM; i++){
+    digitalWrite(COLS[i], STATE[i]);
+  }
+
+}
+
+int readRows(){
+  int totalNum=0;
+  for(int i = 0; i<ROWS_NUM; i++){
+    totalNum *= 2;
+    int digRead = digitalRead(ROWS[i]);
+    totalNum += digRead;
+    if(KB_DEBUG){
+      Serial.print("Checking pin #");
+      Serial.print(ROWS[i]);
+      Serial.print(" in row #");
+      Serial.print(i+1);
+      Serial.print(" read ");
+      Serial.println(digRead);
+      Serial.println(totalNum);
+    }
+  }
+  if(KB_DEBUG){
+    Serial.println("");
+  }
+  return (totalNum - 1);
 }
 
 uint16_t ReadFile(byte* Samples){
@@ -341,7 +348,6 @@ bool FillI2SBuffer(byte* Samples,uint16_t BytesInBuffer){
       return false;                               // Still more data to send to I2S so return false to indicate this
 }
 
-
 bool ValidWavData(WavHeader_Struct* Wav){
   if(memcmp(Wav->RIFFSectionID,"RIFF",4)!=0) 
   {    
@@ -390,7 +396,6 @@ bool ValidWavData(WavHeader_Struct* Wav){
   }
   return true;
 }
-
 
 void DumpWAVHeader(WavHeader_Struct* Wav)
 {
