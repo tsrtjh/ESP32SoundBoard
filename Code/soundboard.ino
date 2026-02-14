@@ -47,7 +47,7 @@
 
     // Debugging with serial
     const bool KB_DEBUG = false;                  // Debugging Keyboard presses
-    const bool I2S_DEBUG = false;                  // Debugging I2S file reading
+    const bool I2S_DEBUG = true;                  // Debugging I2S file reading
     const bool WAV_DEBUG = false;
 //------------------------------------------------------------------------------------------------------------------------
 
@@ -113,6 +113,7 @@ void loop() {
     }else{
       if(!FileLoaded){
         FileLoaded = loadWavFile(WAV_ARRAY[PressedButton]);
+        i2s_channel_enable(TX_Handle);
       }else{
         PlayWav();
       }
@@ -146,7 +147,7 @@ void I2SInit(){
   Serial.println("initializing i2s TX channel");
   i2s_new_channel(&Chan_Cfg, &TX_Handle, NULL);
   i2s_channel_init_std_mode(TX_Handle, &Std_Cfg);
-  i2s_channel_enable(TX_Handle);
+  //i2s_channel_enable(TX_Handle);
 }
 
 
@@ -317,6 +318,7 @@ uint16_t ReadFile(byte* Samples){
       Serial.println("Done reading file!");
       Pressed = false;
       FileLoaded = false;
+      i2s_channel_disable(TX_Handle);
     }
     return BytesToRead;                           // return the number of bytes read into buffer
 }
@@ -397,10 +399,8 @@ bool ValidWavData(WavHeader_Struct* Wav){
   return true;
 }
 
-void DumpWAVHeader(WavHeader_Struct* Wav)
-{
-  if(memcmp(Wav->RIFFSectionID,"RIFF",4)!=0)
-  {
+void DumpWAVHeader(WavHeader_Struct* Wav){
+  if(memcmp(Wav->RIFFSectionID,"RIFF",4)!=0){
     Serial.print("Not a RIFF format file - ");    
     PrintData(Wav->RIFFSectionID,4);
     return;
