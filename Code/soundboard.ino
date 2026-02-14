@@ -48,7 +48,7 @@
     // Debugging with serial
     const bool KB_DEBUG = false;                  // Debugging Keyboard presses
     const bool I2S_DEBUG = false;                  // Debugging I2S file reading
-    const bool WAV_DEBUG = false;
+    const bool WAV_DEBUG = false;                 // Debugging WAV header dump
 //------------------------------------------------------------------------------------------------------------------------
 
 // Global variables
@@ -56,12 +56,12 @@
     int CurrentColumn = 0;                        // Storing the current "column cycle"
     bool Pressed = false;                         // Boolean if a button is pressed
     int PressedTimer = 0;                         // Cooldown of button presses
-    int PressedButton = NOTPRESSED;
+    int PressedButton = NOTPRESSED;               // The value of the currently pressed button
 
     // Wav files
     int FileSize=0;                               // Current played file size 
     File WavFile;                                 // Object for root of SD card directory
-    bool FileLoaded = false;
+    bool FileLoaded = false;                      // Is a WAV file loaded?
 
     // I2S configuration
     i2s_chan_handle_t TX_Handle;
@@ -112,6 +112,7 @@ void loop() {
       keyboardRoutine();
     }else{
       if(!FileLoaded){
+        i2s_channel_enable(TX_Handle);
         FileLoaded = loadWavFile(WAV_ARRAY[PressedButton]);
       }else{
         PlayWav();
@@ -146,7 +147,7 @@ void I2SInit(){
   Serial.println("initializing i2s TX channel");
   i2s_new_channel(&Chan_Cfg, &TX_Handle, NULL);
   i2s_channel_init_std_mode(TX_Handle, &Std_Cfg);
-  i2s_channel_enable(TX_Handle);
+  // i2s_channel_enable(TX_Handle);
 }
 
 
@@ -231,6 +232,7 @@ bool loadWavFile(String fileName){
     Serial.print("Could not open ");
     Serial.print(fileName);
     Pressed = false;                              // Set the button state to "not pressed" to get a new press value.
+    i2s_channel_disable(TX_Handle);               // No file found, do not play any music (disable the channel).
   }else{
     WavFile.read((byte *) &WavHeader,44);         // Read in the WAV header, which is first 44 bytes of the file. 
                                                   // We have to typecast to bytes for the "read" function
@@ -248,7 +250,7 @@ bool loadWavFile(String fileName){
 // Helper functions
 
 void powerCols(int currentColumn){
-  int STATE[COLS_NUM];
+  int STATE[COLS_NUM];                // Columns power state
   if(0 <= currentColumn && currentColumn <= 3){
     STATE[0] = (currentColumn & MASK1);
     STATE[1] = (currentColumn & MASK2);
@@ -257,7 +259,7 @@ void powerCols(int currentColumn){
     return;
   }
 
-  //Write to the board
+  // Write the columns' states to the board
   for(int i = 0; i<COLS_NUM; i++){
     digitalWrite(COLS[i], STATE[i]);
   }
@@ -299,7 +301,10 @@ uint16_t ReadFile(byte* Samples){
     BytesReadSoFar+=BytesToRead;                  // Update the total bytes red in so far
     
     if(BytesReadSoFar>=WavHeader.DataSize){       // Have we read in all the data?
-      WavFile.seek(44);                           // Reset to start of wav data  
+      Serial.println("Done reading file!");       // Print "Done" message
+      Pressed = false;                            // Reset the button pressed state
+      FileLoaded = false;                         // Reset the file loaded state
+      i2s_channel_disable(TX_Handle);             // Disable the TX channel
       BytesReadSoFar=0;                           // Clear to no bytes read in so far                            
     }
     if(I2S_DEBUG){                                // Debugging info
@@ -310,13 +315,6 @@ uint16_t ReadFile(byte* Samples){
       Serial.print("Bytes %: ");
       Serial.print(BytesReadSoFar*100/FileSize);
      Serial.println("%");
-    }
-    
-    // File done reading
-    if(BytesReadSoFar >= FileSize - NUM_BYTES_TO_READ_FROM_FILE){
-      Serial.println("Done reading file!");
-      Pressed = false;
-      FileLoaded = false;
     }
     return BytesToRead;                           // return the number of bytes read into buffer
 }
@@ -397,10 +395,8 @@ bool ValidWavData(WavHeader_Struct* Wav){
   return true;
 }
 
-void DumpWAVHeader(WavHeader_Struct* Wav)
-{
-  if(memcmp(Wav->RIFFSectionID,"RIFF",4)!=0)
-  {
+void DumpWAVHeader(WavHeader_Struct* Wav){
+  if(memcmp(Wav->RIFFSectionID,"RIFF",4)!=0){
     Serial.print("Not a RIFF format file - ");    
     PrintData(Wav->RIFFSectionID,4);
     return;
